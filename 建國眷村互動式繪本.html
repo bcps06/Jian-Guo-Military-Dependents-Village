@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>虎尾建國眷村實境探險</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #f3f4f6;
+            font-family: "DFKai-SB", "BiauKai", "標楷體", serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .book-container {
+            width: 100%;
+            max-width: 650px;
+            height: 90vh;
+            background: white;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .content-area {
+            flex-grow: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .image-wrapper {
+            width: 100%;
+            height: 280px;
+            margin-bottom: 1.5rem;
+            position: relative;
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid #e2e8f0;
+            cursor: zoom-in;
+            flex-shrink: 0;
+        }
+
+        .page-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .title-text {
+            width: 100%;
+            font-size: 1.7rem;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 1.2rem;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        .description-text {
+            width: 100%;
+            font-size: 1.25rem;
+            color: #374151;
+            line-height: 1.8;
+            text-align: left;
+            text-indent: 2em;
+            margin-bottom: 1rem;
+            white-space: pre-line;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            justify-content: center;
+            align-items: center;
+            cursor: zoom-out;
+        }
+
+        .modal img {
+            max-width: 95%;
+            max-height: 95%;
+            object-fit: contain;
+        }
+
+        .nav-buttons {
+            padding: 1rem;
+            background: #f9fafb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .btn {
+            padding: 0.7rem 1.4rem;
+            border-radius: 9999px;
+            font-weight: bold;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .btn-primary { background-color: #b91c1c; color: white; }
+        .btn-secondary { background-color: #4b5563; color: white; }
+        .btn-audio { background-color: #f59e0b; color: white; }
+
+        .quiz-option {
+            width: 100%;
+            text-align: left;
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 0.6rem;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: 0.2s;
+        }
+
+        .quiz-option:hover:not(.disabled) { border-color: #b91c1c; background-color: #fef2f2; }
+        .quiz-option.correct { border-color: #059669; background-color: #ecfdf5; }
+        .quiz-option.wrong { border-color: #dc2626; background-color: #fef2f2; }
+        .quiz-option.disabled { cursor: default; }
+
+        .feedback {
+            width: 100%;
+            margin-top: 1rem;
+            font-weight: bold;
+            display: none;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: left;
+        }
+
+        #progress-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 5px;
+            background-color: #b91c1c;
+            transition: width 0.3s ease;
+            z-index: 10;
+        }
+
+        .placeholder-icon {
+            position: absolute;
+            color: #94a3b8;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+<div id="imageModal" class="modal" onclick="closeModal()">
+    <img id="modalImg" src="" alt="大圖顯示">
+</div>
+
+<div class="book-container">
+    <div id="progress-bar" style="width: 0%"></div>
+    
+    <div id="content" class="content-area">
+        <!-- JS 注入內容 -->
+    </div>
+
+    <div class="nav-buttons">
+        <button id="prevBtn" class="btn btn-secondary" style="visibility: hidden;">上一頁</button>
+        <button id="speakBtn" class="btn btn-audio">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+            朗讀
+        </button>
+        <button id="nextBtn" class="btn btn-primary">下一頁</button>
+    </div>
+</div>
+
+<script>
+    const fixUrl = (id) => `https://lh3.googleusercontent.com/u/0/d/${id}=w1000`;
+
+    const pages = [
+        {
+            type: 'story',
+            title: '探索虎尾：建國眷村\n走進雲林的歷史地標',
+            imgId: '14_jr3SOGlMwYMzJiWwdRYpi9ARGiMvRx',
+            desc: '小朋友，歡迎來到建國一村！這裡曾是重要的軍事基地，現在變成了充滿故事的眷村文化區。讓我們一起來看看這裡的真面目吧！'
+        },
+        {
+            type: 'story',
+            title: '神風特攻隊訓練自殺式攻擊的基地',
+            imgId: '1ydCDbzxn1ClsNmve9EO1ey9hYLGRm9XW',
+            desc: '此部隊以「一人、一機、一彈換一艦」的自殺攻擊方式造成第二次世界大戰時美國重大的損失。直到日本戰敗，國民政府遷臺，此基地才由空軍接收而成為空軍眷村。'
+        },
+        {
+            type: 'story',
+            title: '軍帽式崗哨',
+            imgId: '1ii72DMKaOsvhCqgGhN0q6Q4e-rqCduTz',
+            desc: '這就是最知名的番兵塔！厚實的水泥頂蓋，看起來既威嚴又可愛，是守衛兵舍的出入口。'
+        },
+        {
+            type: 'story',
+            title: '眷村人的「小烏龜防空洞」',
+            imgId: '1MDFuXx7ZIkCHwPdWFpLaXHgI26ZchVPV',
+            desc: '從日軍用於反登陸及美軍掃射兵營時躲藏用途，到成為眷村孩童躲藏、玩耍的娛樂空間。'
+        },
+        {
+            type: 'story',
+            title: '戰備蓄水池',
+            imgId: '10xS_0nbsnP9SAoy5RTuITaX2ANHgwoez',
+            desc: '於虎尾飛行場的兵舍區中，每幾棟兵舍旁便設有一座消防池，用於敵軍轟炸兵舍起火時可滅火使用。'
+        },
+        {
+            type: 'story',
+            title: '壯觀的水塔',
+            imgId: '1_hze2HwCIpvp5qyJ4FN8GxENgm4Y3yMV',
+            desc: '這座水塔很高，站在下面往上看，你會發現建國一村水塔上的牆壁有一個個凹洞。那是二戰時美軍轟炸所留下的機關槍掃射痕跡，記錄了那段驚險的歷史。'
+        },
+        {
+            type: 'story',
+            title: '🏁 探險完成！',
+            imgId: '14_jr3SOGlMwYMzJiWwdRYpi9ARGiMvRx',
+            desc: '希望這本繪本能讓你更了解建國眷村。這裡的每一磚一瓦，都藏著守護家園的故事喔！\n按下一頁可以參加歷史小偵探挑戰喔'
+        },
+        {
+            type: 'quiz',
+            title: '🏆 歷史小偵探挑戰\n第一題：火眼金睛',
+            question: '在壯觀的水塔上面，有很多一點一點的小凹洞，請問那些凹洞是怎麼來的？',
+            imgId: '1_hze2HwCIpvp5qyJ4FN8GxENgm4Y3yMV',
+            options: ['(A) 建築師故意設計的裝飾品。', '(B) 二戰時美軍機關槍掃射留下的痕跡。', '(C) 小鳥們用力啄出來的小窩。'],
+            answer: 1,
+            feedback: '解答： 選 (B)。那是歷史留下的真實傷痕，提醒我們戰爭的殘酷與和平的可貴。'
+        },
+        {
+            type: 'quiz',
+            title: '第二題：造型大猜謎',
+            imgId: '1ii72DMKaOsvhCqgGhN0q6Q4e-rqCduTz',
+            question: '守衛兵舍出入口的「番兵塔」，因為頂蓋很厚實，長得像哪一種東西，所以又被叫做「軍帽式崗哨」？',
+            options: ['(A) 廚師戴的白帽子。', '(B) 漂亮的遮陽帽。', '(C) 軍人戴的軍帽。'],
+            answer: 2,
+            feedback: '解答： 選 (C)。它的造型獨特，看起來既威嚴又有一種呆萌的可愛感呢！'
+        },
+        {
+            type: 'quiz',
+            title: '第三題：空間大變身',
+            imgId: '1w7z1amoHtvgUbfwNG6Jidf2GI8rwolkc',
+            question: '外號叫「小烏龜」的防空洞，在戰爭結束後變成了眷村小朋友的什麼地方？',
+            options: ['(A) 躲藏與玩耍的娛樂空間。', '(B) 停放腳踏車的車庫。', '(C) 專門煮飯的廚房。'],
+            answer: 0,
+            feedback: '解答： 選 (A)。雖然原本是躲避炸彈的地方，但對後來的眷村孩子來說，那裡充滿了童年的歡笑回憶。'
+        },
+        {
+            type: 'story',
+            title: '🎖️ 結業小儀式',
+            imgId: '14_jr3SOGlMwYMzJiWwdRYpi9ARGiMvRx',
+            desc: '恭喜你完成所有探險！小朋友，你已經從一個小小遊客，變成了解虎尾建國眷村歷史的「眷村守護者」囉！'
+        }
+    ];
+
+    let currentPage = 0;
+    const synth = window.speechSynthesis;
+
+    function openModal(src) {
+        document.getElementById('modalImg').src = src;
+        document.getElementById('imageModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('imageModal').style.display = 'none';
+    }
+
+    function handleImageError(img) {
+        img.style.display = 'none';
+        img.parentElement.querySelector('.placeholder-icon').style.display = 'flex';
+    }
+
+    function updatePage() {
+        const page = pages[currentPage];
+        const container = document.getElementById('content');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const progress = document.getElementById('progress-bar');
+        
+        progress.style.width = `${((currentPage + 1) / pages.length) * 100}%`;
+        synth.cancel();
+
+        prevBtn.style.visibility = currentPage === 0 ? 'hidden' : 'visible';
+        nextBtn.innerText = currentPage === pages.length - 1 ? '再看一次' : '下一頁';
+
+        const imgSrc = fixUrl(page.imgId);
+
+        let html = `
+            <div class="image-wrapper" onclick="openModal('${imgSrc}')" title="點擊放大圖片">
+                <img class="page-image" src="${imgSrc}" alt="實境圖片" onerror="handleImageError(this)">
+                <div class="placeholder-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    <span class="mt-2 text-sm">圖片載入中...</span>
+                </div>
+            </div>
+            <h1 class="title-text">${page.title.replace(/\n/g, '<br>')}</h1>
+        `;
+
+        if (page.type === 'story') {
+            html += `<div class="description-text">${page.desc}</div>`;
+        } else if (page.type === 'quiz') {
+            html += `<div class="description-text font-bold" style="text-indent:0; text-align:center; margin-bottom:1.5rem;">${page.question}</div>`;
+            html += `<div class="w-full">`;
+            page.options.forEach((opt, idx) => {
+                html += `<div class="quiz-option" onclick="checkAnswer(${idx})">${opt}</div>`;
+            });
+            html += `</div>`;
+            html += `<div id="quiz-feedback" class="feedback"></div>`;
+        }
+
+        container.innerHTML = html;
+    }
+
+    window.checkAnswer = (index) => {
+        const page = pages[currentPage];
+        const options = document.querySelectorAll('.quiz-option');
+        const feedbackDiv = document.getElementById('quiz-feedback');
+        
+        if (index === page.answer) {
+            options.forEach(opt => {
+                opt.classList.add('disabled');
+                opt.onclick = null;
+            });
+            options[index].classList.add('correct');
+            options[index].classList.remove('wrong');
+            
+            feedbackDiv.style.display = 'block';
+            feedbackDiv.style.backgroundColor = '#ecfdf5';
+            feedbackDiv.style.color = '#065f46';
+            feedbackDiv.innerHTML = `✨ 答對了！<br>${page.feedback}`;
+            speakText('答對了！' + page.feedback);
+        } else {
+            options[index].classList.add('wrong');
+            feedbackDiv.style.display = 'block';
+            feedbackDiv.style.backgroundColor = '#fffbeb';
+            feedbackDiv.style.color = '#92400e';
+            feedbackDiv.innerHTML = `❌ 不太對喔，再嘗試看看吧！`;
+            speakText('不太對喔，再嘗試看看吧！');
+        }
+    };
+
+    function speakText(text) {
+        synth.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'zh-TW';
+        utterance.rate = 1.0;
+        synth.speak(utterance);
+    }
+
+    document.getElementById('speakBtn').addEventListener('click', () => {
+        const page = pages[currentPage];
+        let text = page.title.replace(/\n/g, ' ') + (page.type === 'story' ? "。" + page.desc : "。" + page.question);
+        speakText(text);
+    });
+
+    document.getElementById('nextBtn').addEventListener('click', () => {
+        if (currentPage < pages.length - 1) currentPage++;
+        else currentPage = 0;
+        updatePage();
+    });
+
+    document.getElementById('prevBtn').addEventListener('click', () => {
+        if (currentPage > 0) currentPage--;
+        updatePage();
+    });
+
+    updatePage();
+</script>
+
+</body>
+</html>
